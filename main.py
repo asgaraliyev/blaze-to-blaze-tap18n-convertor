@@ -1,8 +1,13 @@
+import json
+import os
 import requests
 import uuid
 import numpy as np
 import re
 from bs4 import BeautifulSoup
+azJsonFileName="azJson.json"
+enJsonFileName="enJson.json"
+resutlFileName="result.html"
 f = open("Index.html", "r")
 html=f.read()
 soup = BeautifulSoup(html, 'html.parser')
@@ -137,6 +142,18 @@ elements=["a",
 "video",
 "wbr",
 "xmp"]
+def editJson(fileName,data):
+    with open("output/"+fileName, 'w',encoding='utf-8') as f:
+        json.dump(data, f, ensure_ascii=False, indent=4)  
+def editFile(fileName,text):
+    try:
+        # os.remove("output/"+fileName)
+        f = open(f"output/"+fileName, "w")
+        f.write(text)
+        f.close()
+    except:
+        print("something went wrong 193")
+
 apiUrl = 'http://localhost:4000/?q={}&from={}&to={}'
 def translate(text):
     try:
@@ -177,5 +194,6 @@ for id in dataIds:
             enJson[text]=textForCheck
             azJson[text]=translate(transed)
 removeDataIds()
-print(enJson)
-print(azJson)
+editJson(enJsonFileName, enJson)
+editJson(azJsonFileName, azJson)
+editFile(resutlFileName, str(soup.prettify()))
