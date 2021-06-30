@@ -143,8 +143,8 @@ elements=["a",
 "wbr",
 "xmp"]
 def editJson(fileName,data):
-    with open("output/"+fileName, 'w',encoding='utf-8') as f:
-        json.dump(data, f, ensure_ascii=False, indent=4)  
+    with open("output/"+fileName, 'w',) as f:
+        json.dump(data, f,ensure_ascii=False)  
 def editFile(fileName,text):
     try:
         # os.remove("output/"+fileName)
