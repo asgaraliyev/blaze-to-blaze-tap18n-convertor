@@ -4,11 +4,12 @@ import requests
 import uuid
 import numpy as np
 import re
-from bs4 import BeautifulSoup
-azJsonFileName="azJson.json"
-enJsonFileName="enJson.json"
+import codecs
+from bs4 import BeautifulSoup, Comment
+azJsonFileName="az.i18n.json"
+enJsonFileName="en.i18n.json"
 resutlFileName="result.html"
-f = open("Index.html", "r")
+f = codecs.open("translate.html", "r")
 html=f.read()
 soup = BeautifulSoup(html, 'html.parser')
 elements=["a",
@@ -142,13 +143,25 @@ elements=["a",
 "video",
 "wbr",
 "xmp"]
+def readJson(fileName):
+    with open("i18n/"+fileName) as jsonFile:
+        jsonObject = json.load(jsonFile)
+        jsonFile.close()
+        return jsonObject
+
 def editJson(fileName,data):
-    with open("output/"+fileName, 'w',) as f:
+    with open("i18n/"+fileName, 'w',) as f:
         json.dump(data, f,ensure_ascii=False)  
+def updateJson(fileName,data):
+    obj=readJson(fileName)
+    keys=data.keys()
+    for key in keys:
+        obj[key]=data[key]
+    editJson(fileName, obj)
 def editFile(fileName,text):
     try:
-        # os.remove("output/"+fileName)
-        f = open(f"output/"+fileName, "w")
+        # os.remove("i18n/"+fileName)
+        f = open(f"i18n/"+fileName, "w")
         f.write(text)
         f.close()
     except:
@@ -181,19 +194,23 @@ for i in allElements:
 azJson={}
 enJson={}
 for id in dataIds:
-    elem=soup.find_all(attrs={"data-asgar-id" : id})[0]
-    del elem["data-asgar-id"]
-    if(elem is not None):
-        textForCheck=str(elem.string).strip()
-        text=str(elem.string).strip().lower().replace(" ", "_")
-        text=re.sub(r'\W+', '', text)
-        length=len(text)
-        if length!=0 and ("{{" not in textForCheck or "}}" not in textForCheck) and not elem.has_attr('dontranslate'):
-            elem.string=mainConvert(text)
-            transed=translate(textForCheck)
-            enJson[text]=textForCheck
-            azJson[text]=translate(transed)
+    try:
+        elem=soup.find_all(attrs={"data-asgar-id" : id})[0]
+        del elem["data-asgar-id"]
+        if(elem is not None):
+            textForCheck=str(elem.string).strip()
+            text=str(elem.string).strip().lower().replace(" ", "_")
+            text=re.sub(r'\W+', '', text)
+            length=len(text)
+            if length!=0 and (">" not in textForCheck and "{{" not in textForCheck and "}}" not in textForCheck) and not elem.has_attr('dontranslate'):
+                print(elem,textForCheck,"{{" not in textForCheck )
+                elem.string=mainConvert(text)
+                transed=translate(textForCheck)
+                enJson[text]=textForCheck
+                azJson[text]=translate(transed)
+    except:
+        print("something went wrong 210")
+updateJson(enJsonFileName, enJson)
+updateJson(azJsonFileName, azJson)
 removeDataIds()
-editJson(enJsonFileName, enJson)
-editJson(azJsonFileName, azJson)
-editFile(resutlFileName, str(soup.prettify()))
+editFile(resutlFileName, str(soup.prettify()).replace("&gt;", ">"))
